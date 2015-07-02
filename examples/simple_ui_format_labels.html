@@ -8,19 +8,42 @@
         <script type="text/javascript" src="../dist/pivot.js"></script>
         <style>
             * {font-family: Verdana;}
+            .blue { background-color: #ccf !important; }
+            .red { background-color: #fcc !important; }
+            .small { font-size: small !important; }
+            .large { font-size: large !important; }
+            .startColGroup1, .rowTotal, .pvtGrandTotal, .pvtTotalLabel { border-left-width: 3px !important; border-left-color: black !important; }
+            .startColGroup2 { border-left-width: 2px !important; }
+            .startRowGroup1, .colTotal, .pvtGrandTotal, .pvtTotalLabel { border-top-width: 3px !important; border-top-color: black !important; }
+            .startRowGroup2 { border-top-width: 2px !important; }
         </style>
     </head>
     <body>
         <script type="text/javascript">
+
+var same_items = function(l1, l2) {
+    var i, len;
+    len = (l1.length <= l2.length) ? l1.length : l2.length;
+    for (i = 0; i < len; i++) {
+        if (l1[i] != l2[i]) {
+            return i;
+        }
+    }
+    return len;
+};
+
 $(function() {
     $("#output").pivotUI(
         [ 
-            {color: "blue", shape: "circle"}, 
-            {color: "red", shape: "triangle"}
+            {color: "blue", size: "large", shape: "circle"}, 
+            {color: "blue", size: "small", shape: "triangle"}, 
+            {color: "red", size: "small", shape: "triangle"},
+            {color: "red", size: "large", shape: "triangle"},
+            {color: "red", size: "large", shape: "circle"}
         ], 
         { 
             rows: ["color"], 
-            cols: ["shape"],
+            cols: ["shape", "size"],
             rendererOptions: {
                 formatHeaders: function(attr, val) {
                     if (attr == "color") {
@@ -33,6 +56,34 @@ $(function() {
                     } else {
                         return val;
                     }
+                },
+                moreClasses: function(pvtClasses, rowKey, colKey, type, pivotData, rowIndex, colIndex) {
+                    var colKeys = pivotData.colKeys;
+                    var rowKeys = pivotData.rowKeys;
+                    rowIndex = parseInt(rowIndex, 10);
+                    colIndex = parseInt(colIndex, 10);
+                    rowClass = function() {
+                        if (rowKey[0] == "red") { return " red"; }
+                        if (rowKey[0] == "blue") { return " blue"; }
+                        return "";
+                    }
+                    colClass = function() {
+                        if (colKey[1] == "small") { return " small"; }
+                        if (colKey[1] == "large") { return " large"; }
+                        return "";
+                    }
+                    colGroups = function() {
+                        if (colKey.length == 0) { return ""; }
+                        return " startColGroup" + (same_items(colKey, colKeys[colIndex-1] || []) + 1) +
+                               // endColGroup and endRowGroup are incorrect for headers!
+                               " endColGroup"   + (same_items(colKey, colKeys[colIndex+1] || []) + 1);
+                    }
+                    rowGroups = function() {
+                        if (rowKey.length == 0) { return ""; }
+                        return " startRowGroup" + (same_items(rowKey, rowKeys[rowIndex-1] || []) + 1) +
+                               " endRowGroup"   + (same_items(rowKey, rowKeys[rowIndex+1] || []) + 1);
+                    }
+                    return rowClass() + colClass() + colGroups() + rowGroups();
                 }
             }
         }
