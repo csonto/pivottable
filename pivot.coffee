@@ -411,6 +411,12 @@ callWithJQuery ($) ->
                 len++
             return len
 
+        # this is more optimal than using defaults, especially when no function is defined:
+        if opts.moreClasses
+            decorate = (pvtClass, rowIndex, colIndex, rowKey, colKey, type) -> [pvtClass, opts.moreClasses(pvtClass, rowKey, colKey, type, pivotData, rowIndex, colIndex)].join(" ")
+        else
+            decorate = (pvtClass, rowIndex, colIndex, rowKey, colKey, type) -> pvtClass
+
         #the first few rows are for col headers
         for own j, c of colAttrs
             tr = document.createElement("tr")
@@ -427,7 +433,7 @@ callWithJQuery ($) ->
                 x = spanSize(colKeys, parseInt(i), parseInt(j))
                 if x != -1
                     th = document.createElement("th")
-                    th.className = "pvtColLabel"
+                    th.className = decorate("pvtColLabel", -1, i, [], colKey, "header")
                     th.innerHTML = opts.formatHeaders(c, colKey[j])
                     th.setAttribute("colspan", x)
                     if parseInt(j) == colAttrs.length-1 and rowAttrs.length != 0
@@ -463,7 +469,7 @@ callWithJQuery ($) ->
                 x = spanSize(rowKeys, parseInt(i), parseInt(j))
                 if x != -1
                     th = document.createElement("th")
-                    th.className = "pvtRowLabel"
+                    th.className = decorate("pvtRowLabel", i, -1, rowKey, [], "header")
                     th.innerHTML = opts.formatHeaders(rowAttrs[j], txt)
                     th.setAttribute("rowspan", x)
                     if parseInt(j) == rowAttrs.length-1 and colAttrs.length !=0
@@ -473,7 +479,7 @@ callWithJQuery ($) ->
                 aggregator = pivotData.getAggregator(rowKey, colKey)
                 val = aggregator.value()
                 td = document.createElement("td")
-                td.className = "pvtVal row#{i} col#{j}"
+                td.className = decorate("pvtVal row#{i} col#{j}", i, j, rowKey, colKey, "data")
                 td.innerHTML = aggregator.format(val)
                 td.setAttribute("data-value", val)
                 tr.appendChild td
@@ -481,7 +487,7 @@ callWithJQuery ($) ->
             totalAggregator = pivotData.getAggregator(rowKey, [])
             val = totalAggregator.value()
             td = document.createElement("td")
-            td.className = "pvtTotal rowTotal"
+            td.className = decorate("pvtTotal rowTotal", i, -1, rowKey, [], "total")
             td.innerHTML = totalAggregator.format(val)
             td.setAttribute("data-value", val)
             td.setAttribute("data-for", "row"+i)
@@ -499,7 +505,7 @@ callWithJQuery ($) ->
             totalAggregator = pivotData.getAggregator([], colKey)
             val = totalAggregator.value()
             td = document.createElement("td")
-            td.className = "pvtTotal colTotal"
+            td.className = decorate("pvtTotal colTotal", -1, j, [], colKey, "total")
             td.innerHTML = totalAggregator.format(val)
             td.setAttribute("data-value", val)
             td.setAttribute("data-for", "col"+j)
